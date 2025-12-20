@@ -29,15 +29,22 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = Player:WaitForChild("PlayerGui")
 
--- Main Frame
+-- BIG Drag Frame (invisible, slightly bigger than actual GUI)
+local DragFrame = Instance.new("Frame")
+DragFrame.Parent = ScreenGui
+DragFrame.Size = UDim2.new(0, 250, 0, 140) -- bigger than visible GUI
+DragFrame.Position = UDim2.new(0.5, -125, 0.8, -70)
+DragFrame.BackgroundTransparency = 1
+DragFrame.Active = true
+DragFrame.Draggable = true
+
+-- Main Frame (the visible GUI)
 local Frame = Instance.new("Frame")
-Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0, 210, 0, 100)
-Frame.Position = UDim2.new(0.5, -105, 0.8, -50)
+Frame.Parent = DragFrame
+Frame.Size = UDim2.new(0, 210, 0, 100) -- original size
+Frame.Position = UDim2.new(0, 20, 0, 20) -- centered inside drag frame
 Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 Frame.BorderSizePixel = 0
-Frame.Active = true
-Frame.Draggable = true
 Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
 
 -- Title
