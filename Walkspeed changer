@@ -1,0 +1,86 @@
+local Player = game.Players.LocalPlayer
+
+-- Make sure humanoid updates on respawn
+local function getHumanoid()
+	local char = Player.Character or Player.CharacterAdded:Wait()
+	return char:WaitForChild("Humanoid")
+end
+
+local Humanoid = getHumanoid()
+Player.CharacterAdded:Connect(function()
+	Humanoid = getHumanoid()
+end)
+
+-- ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+
+-- Main Frame
+local Frame = Instance.new("Frame")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 210, 0, 100)
+Frame.Position = UDim2.new(0.5, -105, 0.8, -50)
+Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Parent = Frame
+Title.Size = UDim2.new(1, -35, 0, 28)
+Title.Position = UDim2.new(0, 10, 0, 4)
+Title.Text = "WalkSpeed"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundTransparency = 1
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Minimize Button
+local Minimize = Instance.new("TextButton")
+Minimize.Parent = Frame
+Minimize.Size = UDim2.new(0, 24, 0, 24)
+Minimize.Position = UDim2.new(1, -28, 0, 4)
+Minimize.Text = "–"
+Minimize.Font = Enum.Font.GothamBold
+Minimize.TextSize = 18
+Minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
+Minimize.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Minimize.BorderSizePixel = 0
+Instance.new("UICorner", Minimize).CornerRadius = UDim.new(0, 6)
+
+-- TextBox (THIS EXISTS I PROMISE 💀)
+local Box = Instance.new("TextBox")
+Box.Parent = Frame
+Box.Size = UDim2.new(1, -20, 0, 38)
+Box.Position = UDim2.new(0, 10, 0, 45)
+Box.PlaceholderText = "Speed (16)"
+Box.Text = ""
+Box.Font = Enum.Font.Gotham
+Box.TextSize = 14
+Box.TextColor3 = Color3.fromRGB(255, 255, 255)
+Box.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+Box.BorderSizePixel = 0
+Box.ClearTextOnFocus = false
+Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 8)
+
+-- Instant WalkSpeed Change
+Box.FocusLost:Connect(function()
+	local speed = tonumber(Box.Text)
+	if speed then
+		Humanoid.WalkSpeed = math.clamp(speed, 1, 500)
+	end
+	Box.Text = ""
+end)
+
+-- Minimize Logic
+local minimized = false
+Minimize.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	Box.Visible = not minimized
+	Frame.Size = minimized and UDim2.new(0, 210, 0, 32) or UDim2.new(0, 210, 0, 100)
+end)
