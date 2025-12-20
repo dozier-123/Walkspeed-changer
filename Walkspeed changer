@@ -1,14 +1,27 @@
 local Player = game.Players.LocalPlayer
 
--- Make sure humanoid updates on respawn
+-- Store current walkspeed
+local currentSpeed = 16 -- default Roblox walkspeed
+
+-- Function to get Humanoid
 local function getHumanoid()
 	local char = Player.Character or Player.CharacterAdded:Wait()
 	return char:WaitForChild("Humanoid")
 end
 
 local Humanoid = getHumanoid()
-Player.CharacterAdded:Connect(function()
-	Humanoid = getHumanoid()
+
+-- Apply current speed to humanoid
+local function applySpeed()
+	if Humanoid then
+		Humanoid.WalkSpeed = currentSpeed
+	end
+end
+
+-- Update speed when character respawns
+Player.CharacterAdded:Connect(function(char)
+	Humanoid = char:WaitForChild("Humanoid")
+	applySpeed()
 end)
 
 -- ScreenGui
@@ -25,7 +38,6 @@ Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 Frame.BorderSizePixel = 0
 Frame.Active = true
 Frame.Draggable = true
-
 Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
 
 -- Title
@@ -53,7 +65,7 @@ Minimize.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Minimize.BorderSizePixel = 0
 Instance.new("UICorner", Minimize).CornerRadius = UDim.new(0, 6)
 
--- TextBox (THIS EXISTS I PROMISE 💀)
+-- TextBox
 local Box = Instance.new("TextBox")
 Box.Parent = Frame
 Box.Size = UDim2.new(1, -20, 0, 38)
@@ -68,11 +80,12 @@ Box.BorderSizePixel = 0
 Box.ClearTextOnFocus = false
 Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 8)
 
--- Instant WalkSpeed Change
+-- Change WalkSpeed on enter/focus lost
 Box.FocusLost:Connect(function()
 	local speed = tonumber(Box.Text)
 	if speed then
-		Humanoid.WalkSpeed = math.clamp(speed, 1, 500)
+		currentSpeed = math.clamp(speed, 1, 500)
+		applySpeed()
 	end
 	Box.Text = ""
 end)
