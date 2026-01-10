@@ -1,48 +1,75 @@
 local Player = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
--- Store current walkspeed
-local currentSpeed = 16 -- default Roblox walkspeed
+-- WalkSpeed variables
+local currentSpeed = 16
+local permanentEnabled = true
+local Humanoid
+local enforceConnection
 
--- Function to get Humanoid
+-- Get Humanoid
 local function getHumanoid()
 	local char = Player.Character or Player.CharacterAdded:Wait()
 	return char:WaitForChild("Humanoid")
 end
 
-local Humanoid = getHumanoid()
-
--- Apply current speed to humanoid
+-- Apply WalkSpeed manually
 local function applySpeed()
 	if Humanoid then
 		Humanoid.WalkSpeed = currentSpeed
 	end
 end
 
--- Update speed when character respawns
+-- Start Heartbeat enforcement
+local function startEnforcing()
+	if enforceConnection then enforceConnection:Disconnect() end
+	enforceConnection = RunService.Heartbeat:Connect(function()
+		if permanentEnabled and Humanoid then
+			if Humanoid.WalkSpeed ~= currentSpeed then
+				Humanoid.WalkSpeed = currentSpeed
+			end
+		end
+	end)
+end
+
+-- Stop Heartbeat enforcement
+local function stopEnforcing()
+	if enforceConnection then
+		enforceConnection:Disconnect()
+		enforceConnection = nil
+	end
+end
+
+-- Initialize
+Humanoid = getHumanoid()
+applySpeed()
+if permanentEnabled then startEnforcing() end
+
+-- Reapply on respawn
 Player.CharacterAdded:Connect(function(char)
 	Humanoid = char:WaitForChild("Humanoid")
-	applySpeed()
+	if permanentEnabled then startEnforcing() end
 end)
 
--- ScreenGui
+-- ===== GUI =====
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = Player:WaitForChild("PlayerGui")
 
--- BIG Drag Frame (invisible, slightly bigger than actual GUI)
+-- Drag Frame (slightly bigger than visible GUI)
 local DragFrame = Instance.new("Frame")
 DragFrame.Parent = ScreenGui
-DragFrame.Size = UDim2.new(0, 250, 0, 140) -- bigger than visible GUI
-DragFrame.Position = UDim2.new(0.5, -125, 0.8, -70)
+DragFrame.Size = UDim2.new(0, 250, 0, 160)
+DragFrame.Position = UDim2.new(0.5, -125, 0.8, -80)
 DragFrame.BackgroundTransparency = 1
 DragFrame.Active = true
 DragFrame.Draggable = true
 
--- Main Frame (the visible GUI)
+-- Main Frame
 local Frame = Instance.new("Frame")
 Frame.Parent = DragFrame
-Frame.Size = UDim2.new(0, 210, 0, 100) -- original size
-Frame.Position = UDim2.new(0, 20, 0, 20) -- centered inside drag frame
+Frame.Size = UDim2.new(0, 210, 0, 130)
+Frame.Position = UDim2.new(0, 20, 0, 20)
 Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 Frame.BorderSizePixel = 0
 Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
@@ -52,7 +79,7 @@ local Title = Instance.new("TextLabel")
 Title.Parent = Frame
 Title.Size = UDim2.new(1, -35, 0, 28)
 Title.Position = UDim2.new(0, 10, 0, 4)
-Title.Text = "WalkSpeed"
+Title.Text = "Walkspeed ( permanent )"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 14
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -72,7 +99,7 @@ Minimize.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Minimize.BorderSizePixel = 0
 Instance.new("UICorner", Minimize).CornerRadius = UDim.new(0, 6)
 
--- TextBox
+-- WalkSpeed TextBox
 local Box = Instance.new("TextBox")
 Box.Parent = Frame
 Box.Size = UDim2.new(1, -20, 0, 38)
@@ -87,7 +114,33 @@ Box.BorderSizePixel = 0
 Box.ClearTextOnFocus = false
 Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 8)
 
--- Change WalkSpeed on enter/focus lost
+-- Permanent Toggle (white, matches GUI)
+local Toggle = Instance.new("TextButton")
+Toggle.Parent = Frame
+Toggle.Size = UDim2.new(0, 120, 0, 24)
+Toggle.Position = UDim2.new(0.5, -60, 0, 90)
+Toggle.Text = "Permanent: ON"
+Toggle.Font = Enum.Font.GothamBold
+Toggle.TextSize = 14
+Toggle.TextColor3 = Color3.fromRGB(255, 255, 255) -- MATCHES GUI
+Toggle.BackgroundColor3 = Color3.fromRGB(28, 28, 28) -- sleek dark
+Toggle.BorderSizePixel = 0
+Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0, 6)
+Toggle.TextXAlignment = Enum.TextXAlignment.Center
+Toggle.TextYAlignment = Enum.TextYAlignment.Center
+
+-- Toggle logic
+Toggle.MouseButton1Click:Connect(function()
+	permanentEnabled = not permanentEnabled
+	if permanentEnabled then
+		startEnforcing()
+	else
+		stopEnforcing()
+	end
+	Toggle.Text = "Permanent: " .. (permanentEnabled and "ON" or "OFF")
+end)
+
+-- Change WalkSpeed instantly
 Box.FocusLost:Connect(function()
 	local speed = tonumber(Box.Text)
 	if speed then
@@ -102,5 +155,6 @@ local minimized = false
 Minimize.MouseButton1Click:Connect(function()
 	minimized = not minimized
 	Box.Visible = not minimized
-	Frame.Size = minimized and UDim2.new(0, 210, 0, 32) or UDim2.new(0, 210, 0, 100)
+	Toggle.Visible = not minimized
+	Frame.Size = minimized and UDim2.new(0, 210, 0, 32) or UDim2.new(0, 210, 0, 130)
 end)
